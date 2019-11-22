@@ -48,19 +48,19 @@ local highlighterTheme = {
   text = 7,
   keyword = 10,
   number = 12,
-  comment = 13,
-  string = 11,
+  comment = 11,
+  string = 15,
   api = 14,
-  callback = 15,
-  selection = 6,
-  escape = 12,
+  callback = 6,
+  selection = 13,
+  escape = 0,
   error = 8
 }
 highlighter:setTheme(highlighterTheme)
 
 local editorTheme = {
   bg = 5, --Background Color
-  cursor = 4 --Cursor Color
+  cursor = 12 --Cursor Color
 }
 ce.theme = editorTheme
 ce.cx, ce.cy = 1, 1 --Cursor Position

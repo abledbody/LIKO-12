@@ -57,8 +57,8 @@ local swidth, sheight = screenSize()
 
 --WIP new editors system
 function edit:initialize()
-  self.flavor = 9 --Orange
-  self.flavorBack = 4 --Brown
+  self.flavor = 2 --Maroon
+  self.flavorBack = 15 --Beige
   self.background = 5 --Dark Grey
   
   self.active = 4 --Active editor

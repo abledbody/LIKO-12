@@ -59,14 +59,14 @@ local function drawGraph()
   --Volume Rectangle
   rect(x2,y2-1,volumeGrid[3]+1,volumeGrid[4]+2,false,0)
   --Horizontal Box (Style)
-  rect(x,y+pitchGrid[4]+4, pitchGrid[3]+1+1, y2-1-y-pitchGrid[4]-4, false, 9)
+  rect(x,y+pitchGrid[4]+4, pitchGrid[3]+1+1, y2-1-y-pitchGrid[4]-4, false, 2)
   patternFill(patternImage)
-  rect(x,y+pitchGrid[4]+4, pitchGrid[3]+1+1, y2-1-y-pitchGrid[4]-4, false, 4)
+  rect(x,y+pitchGrid[4]+4, pitchGrid[3]+1+1, y2-1-y-pitchGrid[4]-4, false, 15)
   patternFill()
   --Vertical Line (Style)
-  rect(x+pitchGrid[3]+1,8, 4,sh-16, false, 9)
+  rect(x+pitchGrid[3]+1,8, 4,sh-16, false, 2)
   patternFill(pattern2Image)
-  rect(x+pitchGrid[3]+1,8, 4,sh-16, false, 4)
+  rect(x+pitchGrid[3]+1,8, 4,sh-16, false, 15)
   patternFill()
   
   local playingNote = math.floor(playingNote)
@@ -194,8 +194,8 @@ function se:drawSelect()
   pal()
   
   -- Selection Clear Control
-  local back_col = 9
-  if(sb.sel_clr_down)then pal(7,13) back_col = 4 end
+  local back_col
+  if(sb.sel_clr_down)then pal(7,13) back_col = 1 else pal(7,15) back_col = 2 end
   rect(sx + sb.sel_clear_offset+1, sy+1, 6, 6, false, back_col)
   _SystemSheet:draw(120, sx + sb.sel_clear_offset, sy)
   pal()

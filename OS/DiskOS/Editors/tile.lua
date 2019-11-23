@@ -126,7 +126,7 @@ function t:drawToolbar()
   end
   
   --Draw the tools
-  rect(swidth-9,sheight-5*8,8,5*8, false, 9)
+  rect(swidth-9,sheight-5*8,8,5*8, false, 2)
   for i=0,4 do
     local sprid = 114+i
     

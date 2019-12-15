@@ -85,7 +85,7 @@ function rt.resetEnvironment()
   patternFill()
   
   TC.setInput(false)
-  if Audio then Audio.stop() end
+  if Audio then Audio.panic() end
 end
 
 function rt.runGame(glob,co,...)

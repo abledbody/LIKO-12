@@ -282,7 +282,7 @@ end
 
 function se:leaved()
   --Stop the current playing SFX
-  if Audio then Audio.stop() end
+  if Audio then Audio.panic() end
   playingNote = -1
 end
 
@@ -432,7 +432,7 @@ function se:playMouse(state,x,y,button,istouch)
     if isInRect(x,y,playRect) and playDown then
       playDown = false
       if playingNote >= 0 then
-        if Audio then Audio.stop() end
+        if Audio then Audio.panic() end
         playingNote = -1
       else
         sfxdata[selectedSlot]:play(0)
@@ -733,7 +733,7 @@ se.keymap = {
   --Play SFX
   ["space"] = function(self)
     if playingNote >= 0 then
-      if Audio then Audio.stop() end
+      if Audio then Audio.panic() end
       playingNote = -1
     else
       sfxdata[selectedSlot]:play(0)

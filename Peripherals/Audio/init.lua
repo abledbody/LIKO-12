@@ -1,80 +1,27 @@
 local perpath = ... --The path to the Audio folder
 
 local events = require("Engine.events")
+local chip = require("Peripherals.Audio.LSynth")
 
 return function(config)
   
-  local sfxThreads = {}
-  local sfxChannels = {}
+  chip:initialize()
   
-  for i=0,3 do
-    sfxThreads[i] = love.thread.newThread(perpath.."sfxthread.lua")
-    sfxChannels[i] = love.thread.newChannel()
+  local function panic()
+    for i=0,3 do
+      chip:interrupt(i)
+      chip:disable(i)
+    end
   end
   
-  local ctunethread = love.thread.newThread(perpath.."ctunethread.lua")
-  local chctune = love.thread.newChannel()
-  
-  for i=0,3 do
-    sfxThreads[i]:start(sfxChannels[i])
-  end
-  ctunethread:start(chctune)
-  
-  events.register("love:reboot", function()
-    for i=0,3 do
-      sfxChannels[i]:clear()
-      sfxChannels[i]:push("stop")
-    end
-    chctune:clear()
-    chctune:push("stop")
-  end)
-  
-  events.register("love:quit", function()
-    for i=0,3 do
-      sfxChannels[i]:clear()
-      sfxChannels[i]:push("stop")
-    end
-    chctune:clear()
-    chctune:push("stop")
-    for i=0,3 do
-      sfxThreads[i]:wait()
-    end
-    ctunethread:wait()
-  end)
+  events.register("love:reboot", panic)
+  events.register("love:quit", panic)
   
   local AU, yAU, devkit = {}, {}, {}
   
-  function AU.generate(wave,freq,amp)
-    
-    if not wave then
-      chctune:clear()
-      chctune:push({})
-      return
-    end
-    
-    if type(wave) ~= "number" then return error("Waveform id should be a number, provided: "..type(wave)) end
-    if type(freq) ~= "number" then return error("Frequency should be a number, provided: "..type(freq)) end
-    if type(amp) ~= "number" then return error("Amplitude should be a number, provided: "..type(amp)) end
-    
-    wave = math.floor(wave)
-    if wave < 0 or wave > 5 then return error("Waveform id is out of range ("..wave.."), should be in [0,5]") end
-    
-    freq = math.abs(freq)
-    amp = math.abs(amp)
-    
-    chctune:clear()
-    chctune:push({wave,freq,amp})
-    
-  end
+  AU.chip = chip
   
-  function AU.stop()
-    chctune:clear()
-    chctune:push({})
-    for i=0,3 do
-      sfxChannels[i]:clear()
-      sfxChannels[i]:push({})
-    end
-  end
+  AU.panic = panic
   
   function AU.play(sfx,chn)
     
@@ -90,9 +37,9 @@ return function(config)
       end
     end
     
-    local sendSFX = {}
+    local data = {}
     for k,v in ipairs(sfx) do
-      sendSFX[k] = v
+      data[k] = v
     end
     
     chn = chn or 0
@@ -103,25 +50,24 @@ return function(config)
     
     if chn < 0 or chn > 3 then return error("Channel is out of range ("..chn.."), should be in [0,3]") end
     
-    sfxChannels[chn]:clear()
-    sfxChannels[chn]:push(sendSFX)
+    chip:interrupt(chn)
+    chip:enable(chn)
     
+    for i = 1, #data, 4 do
+      local dur,wav,freq,amp = data[i],data[i+1],data[i+2],data[i+3]
+      
+      chip:setWaveform(chn, wav)
+      chip:setAmplitude(chn, amp)
+      chip:setFrequency(chn, freq)
+      chip:wait(chn, dur)
+    end
+    
+    chip:setAmplitude(chn, 0)
+    chip:disable(chn)
   end
   
   events.register("love:update", function(dt)
-    
-    for i=0,3 do
-      local terr = sfxThreads[i]:getError()
-      if terr then
-        error("SFXThread #"..i..": "..terr)
-      end
-    end
-    
-    local terr = ctunethread:getError()
-    if terr then
-      error("GenThread: "..terr)
-    end
-    
+    --Put Chip out-of-commands condition check here
   end)
   
   return AU, yAU, devkit

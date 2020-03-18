@@ -57,11 +57,79 @@ for i=0, channels-1 do
 		periodStep = 1/(sampleRate/440), --The period step between each sample for the current frequency
 		reset = true, --Whether the period has been reset this sample or not
 
+		panningSlideRate = false, --(Number/false) The step to add to the amplitude each second inorder to reach the target
+		panningSlideTarget = false, --(Number/false) The target amplitude of the slide
+
+		amplitudeSlideRate = false, --(Number/false) The step to add to the amplitude each second inorder to reach the target
+		amplitudeSlideTarget = false, --(Number/false) The target amplitude of the slide
+
+		frequencySlideRate = false, --(Number/false) The step to add to the frequency each second inorder to reach the target
+		frequencySlideTarget = false, --(Number/false) The target frequency of the slide
+
 		wait = false --How many sample to wait before applying further commands
 	}
 end
 
+
+
 --== Parameters Controller ==--
+
+local actions = {}
+
+actions.enable = function(channelData)
+	channelData.enabled = true
+end
+actions.disable = function(channelData)
+	channelData.enabled = false
+end
+actions.frequency = function(channelData, value)
+	channelData.frequency = value
+	channelData.periodStep = channelData.frequency/sampleRate --1/(sampleRate/channelData.frequency)
+end
+actions.frequencySlide = function(channelData, value, target)
+	channelData.frequencySlideRate = value and value/sampleRate or false
+	channelData.frequencySlideTarget = target or false
+end
+actions.amplitude = function(channelData, value, force)
+	if force then --Force set the amplitude without a slide
+		channelData.amplitude = value
+	else
+		--Automatically slide into the new amplitude during 2 milliseconds
+		--value/0.002 == value*500 (/0.002 -> / 2/1000 -> * 1000/2 -> * 500)
+		channelData.amplitudeSlideTarget = value
+		channelData.amplitudeSlideRate = ((value - channelData.amplitude) * 500)/sampleRate
+	end
+end
+actions.amplitudeSlide = function(channelData, value, target)
+	channelData.amplitudeSlideRate = value and value/sampleRate or false
+	channelData.amplitudeSlideTarget = target or false
+end
+actions.waveform = function(channelData, value)
+	channelData.waveform = value
+end
+actions.panning = function(channelData, value, force)
+	if force then --Force set the panning without a slide
+		channelData.panning = value
+	else
+		--Automatically slide into the new panning during 2 milliseconds
+		--value/0.002 == value*500 (/0.002 -> / 2/1000 -> * 1000/2 -> * 500)
+		channelData.panningSlideTarget = value
+		channelData.panningSlideRate = ((value - channelData.panning) * 500)/sampleRate
+	end
+end
+actions.panningSlide = function(channelData, value, target)
+	channelData.panningSlideRate = value and value/sampleRate or false
+	channelData.panningSlideTarget = target or false
+end
+actions.wait = function(channelData, value)
+	channelData.wait = value*sampleRate
+	return true
+end
+actions.enableAndWait = function(channelData, value)
+	channelData.enabled = true
+	channelData.wait = value*sampleRate
+	return true
+end
 
 --Return the parameters for the next sample to generate.
 --Parameters: The chunnel ID.
@@ -76,7 +144,103 @@ local function nextParameters(channelID)
 	local period = channelData.period
 	local reset = channelData.reset
 
+	local panningSlideRate = channelData.panningSlideRate
+	local panningSlideTarget = channelData.panningSlideTarget
+
+	local amplitudeSlideRate = channelData.amplitudeSlideRate
+	local amplitudeSlideTarget = channelData.amplitudeSlideTarget
+
+	local frequencySlideRate = channelData.frequencySlideRate
+	local frequencySlideTarget = channelData.frequencySlideTarget
+
 	local inChannel = inChannels[channelID]
+
+	if enabled then
+		--Panning update--
+
+		if panningSlideRate then
+			local nextPanning = channelData.panning + panningSlideRate
+
+			--Check if the slide is complete
+			if panningSlideTarget then
+				if panningSlideRate > 0 then --Slide up
+					if nextPanning >= panningSlideTarget then
+						nextPanning = panningSlideTarget
+						channelData.panningSlideRate = false
+						channelData.panningSlideTarget = false
+					end
+				else --Slide down
+					if nextPanning <= panningSlideTarget then
+						nextPanning = panningSlideTarget
+						channelData.panningSlideRate = false
+						channelData.panningSlideTarget = false
+					end
+				end
+			end
+
+			--Clamp the panning value just in-case
+			nextPanning = min(max(-1, nextPanning), 1)
+
+			channelData.panning = nextPanning
+		end
+
+		--Amplitude update--
+		
+		if amplitudeSlideRate then
+			local nextAmplitude = channelData.amplitude + amplitudeSlideRate
+
+			--Check if the slide is complete
+			if amplitudeSlideTarget then
+				if amplitudeSlideRate > 0 then --Slide up
+					if nextAmplitude >= amplitudeSlideTarget then
+						nextAmplitude = amplitudeSlideTarget
+						channelData.amplitudeSlideRate = false
+						channelData.amplitudeSlideTarget = false
+					end
+				else --Slide down
+					if nextAmplitude <= amplitudeSlideTarget then
+						nextAmplitude = amplitudeSlideTarget
+						channelData.amplitudeSlideRate = false
+						channelData.amplitudeSlideTarget = false
+					end
+				end
+			end
+
+			--Clamp the amplitude value just in-case
+			nextAmplitude = min(max(0, nextAmplitude), 1)
+
+			channelData.amplitude = nextAmplitude
+		end
+
+		--Frequency update--
+
+		if frequencySlideRate then
+			local nextFrequency = channelData.frequency + frequencySlideRate
+
+			--Check if the slide is complete
+			if frequencySlideTarget then
+				if frequencySlideRate > 0 then --Slide up
+					if nextFrequency >= frequencySlideTarget then
+						nextFrequency = frequencySlideTarget
+						channelData.frequencySlideRate = false
+						channelData.frequencySlideTarget = false
+					end
+				else --Slide down
+					if nextFrequency <= frequencySlideTarget then
+						nextFrequency = frequencySlideTarget
+						channelData.frequencySlideRate = false
+						channelData.frequencySlideTarget = false
+					end
+				end
+			end
+
+			--Clamp the frequency value just in-case
+			nextFrequency = min(max(0, nextFrequency), 20000)
+
+			channelData.frequency = nextFrequency
+			channelData.periodStep = channelData.frequency/sampleRate
+		end
+	end
 
 	if channelData.wait then
 		local command = inChannel:peek()
@@ -91,37 +255,22 @@ local function nextParameters(channelID)
 	if not channelData.wait then --Execute further commands
 		local command = inChannel:pop()
 		while command do
-			local action = command[1]
+			local action, value, other = command[1], command[2], command[3]
 
-			print("Command", command[1], command[2])
+			print("Command", action, value, other)
 
-			if action == "enable" then
-				channelData.enabled = true
-			elseif action == "disable" then
-				channelData.enabled = false
-			elseif action == "frequency" then
-				channelData.frequency = command[2]
-				channelData.periodStep = channelData.frequency/sampleRate --1/(sampleRate/channelData.frequency)
-			elseif action == "amplitude" then
-				channelData.amplitude = command[2]
-			elseif action == "waveform" then
-				channelData.waveform = command[2]
-			elseif action == "panning" then
-				channelData.panning = command[2]
-			elseif action == "wait" then
-				channelData.wait = command[2]*sampleRate
-				break
-			elseif action == "enableAndWait" then
-				channelData.enabled = true
-				channelData.wait = command[2]*sampleRate
-				break
-			end
+			local actionFunc = actions[action]
+			if actionFunc and actionFunc(channelData, value, other) then break end
 
 			command = inChannel:pop()
 		end
 	end
 
+	--==Parameters update==--
+
 	if not enabled then return 0, false, -1, 0, 0 end
+
+	--Pariod update--
 
 	channelData.reset = false
 

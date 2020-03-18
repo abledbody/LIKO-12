@@ -141,18 +141,18 @@ function se:drawPlay()
   end
 end
 
-local waveGrid,waveHover,waveDown = {sw-56,40,9*6,7,6,1}, false, false
+local waveGrid,waveHover,waveDown = {sw-47,40,9*4,15,4,2}, false, false
 
 function se:drawWave()
   rect(waveGrid[1],waveGrid[2],waveGrid[3],waveGrid[4], false, 5)
-  for i=0,5 do
+  for i=0,7 do
     local colorize = (waveHover and waveHover == i+1) or (selectedWave == i)
     local down = (waveDown and waveHover and waveHover == i+1) or (selectedWave == i)
     
     if colorize then pal(6,8+i) end
     if down then palt(13,true) end
     
-    _SystemSheet:draw(173+i,down and waveGrid[1]+i*9+1 or waveGrid[1]+i*9,down and waveGrid[2]+1 or waveGrid[2])
+    _SystemSheet:draw(153+i,waveGrid[1]+(i%4)*9+(down and 1 or 0),waveGrid[2]+(down and 1 or 0)+(i > 3 and 8 or 0))
     
     pal() palt()
   end
@@ -160,9 +160,9 @@ end
 
 local SelectButtons = {
   ["x_origin"] = sw-55,
-  ["y_origin"] = 52,
+  ["y_origin"] = 60,
   ["sel_x_orig"] = sw-56,
-  ["sel_y_orig"] = 60,
+  ["sel_y_orig"] = 68,
   ["sel_R_offset"] = 17,
   ["selB_offset"] = 33,
   ["sel_clear_offset"] = 23,
@@ -217,7 +217,7 @@ end
 
 local ToolButtons = {
   ["x_origin"] = sw-56,
-  ["y_origin"] = 71,
+  ["y_origin"] = 79,
   ["tools_offset"] = 6,
   ["tools_spacing"] = 11,
   ["tool_down"] = -1,
@@ -446,25 +446,26 @@ end
 
 function se:waveMouse(state,x,y,button,istouch)
   local cx,cy = whereInGrid(x,y,waveGrid)
+  local relevantWave = cx and cx+(cy-1)*waveGrid[5]
   
   if state == "pressed" then
-    if cx then
-      waveHover = cx
+    if relevantWave then
+      waveHover = relevantWave
       waveDown = true
       self:drawWave()
     end
   elseif state == "moved" then
-    if (waveHover and cx and waveHover ~= cx) or not waveHover then
-      waveHover = cx
+    if waveHover and relevantWave and waveHover ~= relevantWave or not waveHover then
+      waveHover = relevantWave
       self:drawWave()
-    elseif waveHover and not cx then
+    elseif waveHover and not relevantWave then
       waveHover = false
       waveDown = false
       self:drawWave()
     end
   elseif state == "released" then
-    if waveDown and cx then
-      selectedWave = cx-1
+    if waveDown and relevantWave then
+      selectedWave = relevantWave-1
       self:drawWave()
     end
     waveDown = false

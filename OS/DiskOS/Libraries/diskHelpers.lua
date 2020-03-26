@@ -20,10 +20,10 @@ function SpriteGroup(id,x,y,w,h,sx,sy,r,sheet)
 end
 
 --Play a sfx
-function SFX(id,chn)
+function SFX(id,chn,queue)
   if (not SFXS) or (not SFXS[id]) then return error("SFX "..tostring(id).." doesn't exist!") end
   
-  SFXS[id]:play(chn)
+  SFXS[id]:play(chn,queue)
 end
 
 --Flags API

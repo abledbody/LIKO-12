@@ -69,8 +69,8 @@ local function newSFX(notes,speed)
     return self.notetime
   end
   
-  function sfx:play(chn)
-    if Audio then Audio.play(self,chn or 0) end
+  function sfx:play(chn,queue)
+    if Audio then Audio.play(self,chn or 0,queue) end
     
     return self
   end

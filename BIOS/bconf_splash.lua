@@ -36,7 +36,7 @@ local LIKO_W, LIKO_H = GPUKit._LIKO_W, GPUKit._LIKO_H
 local ScreenSize = (LIKO_W/2)*LIKO_H
 
 --Create Audio peripheral
-PA("Audio")
+PA("Audio","Audio",{CPUKit = CPUKit})
 
 --Create gamepad contols
 PA("Gamepad","Gamepad",{CPUKit = CPUKit})

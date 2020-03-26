@@ -32,7 +32,8 @@ LSynth.bufferLength = 1/15 --Default buffer length (in seconds).
 LSynth.piecesCount = 4 --Default count of buffer pieces (affects responsivity).
 
 LSynth.thread = nil --The LSynth chip thread.
-LSynth.outChannels = {} --The channels which sends data into the LSynth thread, each audio channel has one.
+LSynth.outChannels = {} --The channels which send data into the LSynth thread, each audio channel has one.
+LSynth.inChannels = {} --The channels which recieve data from the LSynth thread, each audio channel has one.
 
 --==Public Methods==--
 
@@ -46,7 +47,7 @@ Arguments:
 - bufferLength (number/nil): (unsigned float) The length of the buffer in seconds, by default it's 1/60.
 - piecesCount (number/nil): (unsigned int) The number of pieces to divide the buffer into, affects responsivity, by default it's 4.
 ]]
-function LSynth:initialize(channels, sampleRate, bitDepth, bufferLength, piecesCount)
+function LSynth:initialize(requestCallback, channels, sampleRate, bitDepth, bufferLength, piecesCount)
 	if self.initialized then error("Already initialized!") end
 
 	--Check if running on mobile, if love.system is available.
@@ -54,6 +55,8 @@ function LSynth:initialize(channels, sampleRate, bitDepth, bufferLength, piecesC
 
 	--Lower the sample rate if running on mobile.
 	if self.isMobile then LSynth.sampleRate = 22050 end
+
+	self.requestCallback = requestCallback
 
 	--Override the channels count.
 	if channels then self.channels = channels end
@@ -65,14 +68,19 @@ function LSynth:initialize(channels, sampleRate, bitDepth, bufferLength, piecesC
 	if bufferLength then self.bufferLength = bufferLength end
 	--Override the pieces count.
 	if piecesCount then self.piecesCount = piecesCount end
+
+	
 	
 	--Create the communication channels
-	for i=0, self.channels-1 do self.outChannels[i] = love.thread.newChannel() end
+	for i=0, self.channels-1 do
+		self.outChannels[i] = love.thread.newChannel()
+		self.inChannels[i] = love.thread.newChannel()
+	end
 
 	--Load the thread
 	self.thread = love.thread.newThread(dir.."/thread.lua")
 	--Start the thread
-	self.thread:start(path, dir, self.channels, self.sampleRate, self.bitDepth, self.bufferLength, self.piecesCount, self.outChannels)
+	self.thread:start(path, dir, self.channels, self.sampleRate, self.bitDepth, self.bufferLength, self.piecesCount, self.outChannels, self.inChannels)
 
 	self.initialized = true
 end
@@ -148,11 +156,25 @@ function LSynth:interrupt(channel)
 	return self.outChannels[channel]:push({"interrupt"})
 end
 
+--Tells a channel when is an appropriate time to request more commands
+function LSynth:request(channel)
+	return self.outChannels[channel]:push({"request"})
+end
+
 --== Hooks ==--
 
 --love.update
 function LSynth:update(dt)
 	if not self.initialized then error("The chip has not been initialized yet!") end
+	
+	for i = 0, self.channels-1 do
+		local message = self.inChannels[i]:pop()
+		if message == "request" then
+			if self.requestCallback then self.requestCallback(i) end
+			
+			print("Channel "..i.." is requesting more commands")
+		end
+	end
 end
 
 return LSynth

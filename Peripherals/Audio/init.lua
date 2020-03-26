@@ -3,9 +3,16 @@ local perpath = ... --The path to the Audio folder
 local events = require("Engine.events")
 local chip = require("Peripherals.Audio.LSynth")
 
+
 return function(config)
-  
-  chip:initialize()
+	local CPUKit = config.CPUKit
+
+	local function requestCallback(channel)
+		--events.trigger("audio:audiorequest", channel)
+		if CPUKit then CPUKit.triggerEvent("audiorequest", channel) end
+	end
+
+  chip:initialize(requestCallback)
   
   local function panic()
     for i=0,3 do
@@ -17,13 +24,18 @@ return function(config)
   events.register("love:reboot", panic)
   events.register("love:quit", panic)
   
+  local function chipUpdate(dt)
+	chip:update(dt)
+  end
+  events.register("love:update", chipUpdate)
+  
   local AU, yAU, devkit = {}, {}, {}
   
   AU.chip = chip
   
   AU.panic = panic
   
-  function AU.play(sfx,chn)
+  function AU.play(sfx,chn,queue)
     
     if type(sfx) ~= "table" then return error("SFX data should be a table, provided: "..type(sfx)) end
     if #sfx % 4 > 0 then return error("The SFX data is missing some values.") end
@@ -49,26 +61,27 @@ return function(config)
     chn = math.floor(chn)
     
     if chn < 0 or chn > 3 then return error("Channel is out of range ("..chn.."), should be in [0,3]") end
-    
-    chip:interrupt(chn)
-    chip:enable(chn)
+	
+	if not queue then
+		chip:interrupt(chn)
+	end
+	chip:enable(chn)
     
     for i = 1, #data, 4 do
-      local dur,wav,freq,amp = data[i],data[i+1],data[i+2],data[i+3]
-      
+	  local dur,wav,freq,amp = data[i],data[i+1],data[i+2],data[i+3]
+	  
+	  if wav == 6 then freq = freq * 4 end --Noise gets three times the frequency.
+	  
+	  if i == 1 then chip:request(chn) end
       chip:setWaveform(chn, wav)
-      chip:setAmplitude(chn, amp)
+	  chip:setAmplitude(chn, amp*amp)
       chip:setFrequency(chn, freq)
-      chip:wait(chn, dur)
-    end
-    
+	  chip:wait(chn, dur)
+	end
+
     chip:setAmplitude(chn, 0)
     chip:disable(chn)
   end
-  
-  events.register("love:update", function(dt)
-    --Put Chip out-of-commands condition check here
-  end)
   
   return AU, yAU, devkit
   

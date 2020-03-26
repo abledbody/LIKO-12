@@ -15,7 +15,7 @@ local escapable = {"a", "b", "f", "n", "r", "t", "v", "\\", '"', "'"}
 local api = _APIList
 
 --LIKO-12 Callbacks
-local callbacks = {"_draw","_draw30","_draw60","_init","_keypressed","_keyreleased","_mousemoved","_mousepressed","_mousereleased","_textinput","_touchcontrol","_touchmoved","_touchpressed","_touchreleased","_update","_update30","_update60","_wheelmoved","_filedropped","self"}
+local callbacks = {"_draw","_draw30","_draw60","_init","_keypressed","_keyreleased","_mousemoved","_mousepressed","_mousereleased","_textinput","_touchcontrol","_touchmoved","_touchpressed","_touchreleased","_update","_update30","_update60","_wheelmoved","_filedropped","self","_audiorequest"}
 
 --Convert values to keys for instant searching
 for _, list in ipairs({keywords, api, callbacks, escapable}) do

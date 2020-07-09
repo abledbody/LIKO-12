@@ -10,22 +10,22 @@ local CPU, yCPU, CPUKit = PA("CPU")
 --Create a new gpu mounted as "GPU"
 local GPU, yGPU, GPUKit = PA("GPU","GPU",{
   _ColorSet = {
-   {20, 21, 24, 255},--Black
-   {41, 49, 71, 255},--Dark Blue
-   {97, 27, 40, 255},--Maroon
-   {48, 89, 8,  255},--Dark Green
-   {144,93, 67, 255},--Brown
-   {76, 76, 81, 255},--Dark Gray
-   {137,136,130,255},--Bright Grey
-   {255,251,234,255},--White
-   {187,27, 22, 255},--Red
-   {255,111,19, 255},--Orange
+   {5,  5,  6,  255},--Black
+   {25, 39, 57, 255},--Dark Blue
+   {85, 24, 35, 255},--Maroon
+   {36, 76, 7,  255},--Dark Green
+   {136,81, 53, 255},--Brown
+   {69, 69, 76, 255},--Dark Gray
+   {144,143,136,255},--Bright Grey
+   {255,251,232,255},--White
+   {182,10, 4,  255},--Red
+   {255,110,17, 255},--Orange
    {255,236,98, 255},--Yellow
-   {127,168,70, 255},--Green
-   {141,184,213,255},--Cyan
-   {92, 71, 185,255},--Blue
-   {241,99, 145,255},--Pink
-   {245,191,140,255} --Tan
+   {122,161,67, 255},--Green
+   {139,182,210,255},--Cyan
+   {90, 69, 180,255},--Blue
+   {240,99, 145,255},--Pink
+   {244,190,139,255} --Tan
   },
   _ClearOnRender = true, --Speeds up rendering, but may cause glitches on some devices !
   CPUKit = CPUKit

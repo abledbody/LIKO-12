@@ -25,6 +25,8 @@ local MapVW, MapVH = swidth/8, sheight/8 --The visible map space in cells.
 
 local MapVPW, MapVPH = MapVW*8, MapVH*8 --The visible map space in pixels.
 
+local SelectDataWidth, SelectDataHeight = 31, 29
+
 local Map = MapObj(MapW, MapH)
 
 local mapdx, mapdy = 0,0 --Map drawing offsets.
@@ -175,14 +177,23 @@ function t:drawMap()
     local seldx = selsx*8+mapdx-1
     local seldy = selsy*8+mapdy-1+8
     
-    local selw = (selex-selsx)*8+10
-    local selh = (seley-selsy)*8+10
-    rect(seldx-2,seldy-2,selw+4,selh+4,true,0)
-    rect(seldx-1,seldy-1,selw+2,selh+2,true,0)
-    rect(seldx,seldy,selw,selh,true,0)
+    local selw = selex-selsx
+	local selh = seley-selsy
+	local seldw = selw*8+10
+	local seldh = selh*8+10
+	
+    rect(seldx-2,seldy-2,seldw+4,seldh+4,true,0)
+    rect(seldx-1,seldy-1,seldw+2,seldh+2,true,0)
+    rect(seldx,seldy,seldw,seldh,true,0)
     patternFill(selPattern)
-    rect(seldx-1,seldy-1,selw+2,selh+2,true,7)
-    patternFill()
+    rect(seldx-1,seldy-1,seldw+2,seldh+2,true,7)
+	patternFill()
+	rect(0, screenHeight() - SelectDataHeight, SelectDataWidth, SelectDataHeight, false, 0)
+	color(7)
+	print("x: "..selsx, 1, screenHeight() - SelectDataHeight + 1)
+	print("y: "..selsy, 1, screenHeight() - SelectDataHeight + 8)
+	print("w: "..selw+1, 1, screenHeight() - SelectDataHeight + 15)
+	print("h: "..selh+1, 1, screenHeight() - SelectDataHeight + 22)
   end
   
   --Declip
